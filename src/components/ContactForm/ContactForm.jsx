@@ -1,81 +1,64 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import PropTypes from 'prop-types';
-import { nanoid } from 'nanoid';
-import { Box } from '../Box';
-import { Form, Label, Input } from './ContactForm.styled';
-import { Button } from '../Button';
+import { Formik } from 'formik';
+import * as yup from 'yup';
+import { yupPhoneValidation } from 'schema';
+import { FaUserPlus, FaPhoneAlt } from "react-icons/fa";
+import { Label,
+         TertiaryButton,
+         PrimaryButton, 
+         FormError, 
+         StyledForm, 
+         FormInput } from "components/ui";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
-export const ContactForm = ({ onFormSubmit, isLoading }) => {
-  const nameId = nanoid();
-  const phoneID = nanoid();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    //     watch,
-    formState,
-    formState: { errors, isSubmitSuccessful },
-  } = useForm({ defaultValues: { name: '', number: '' } });
-
-  const onSubmit = data => {
-    onFormSubmit(data);
-  };
-
-  useEffect(() => {
-    if (formState.isSubmitSuccessful) {
-      reset({ name: '', number: '' });
-    }
-  }, [formState, isSubmitSuccessful, reset]);
+export const ContactForm = ({handleSubmit, initialValues, isLoading, update=false}) => {
+  const schema = yup.object({
+    ...yupPhoneValidation,
+    name: yup.string().required(),
+  });
 
   return (
-    <Box
-      display="block"
-      p={2}
-      mb={4}
-      bg="bgComponent"
-      width="95%"
-      borderRadius="normal"
-      boxShadow="basic"
-    >
-      <Form onSubmit={handleSubmit(onSubmit)}>
-        <Label htmlFor={nameId}>Name</Label>
-        <Input
-          id={nameId}
-          type="text"
-          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-          {...register('name', {
-            required: true,
-            pattern:
-              /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/i,
-          })}
-          aria-invalid={errors.name ? 'true' : 'false'}
-        />
-        {errors.name?.type === 'required' && (
-          <p role="alert">Name is required</p>
+    <Formik
+      initialValues={initialValues}
+      validationSchema={schema}
+      onSubmit={handleSubmit}>
+        {({values, handleChange, handleBlur}) => (
+        <StyledForm>
+            <Label htmlFor='name'><FaUserPlus/>Name</Label>
+            <FormInput type='text' name='name'/>
+            <FormError name="name"/>
+            <Label htmlFor='number'><FaPhoneAlt/>Number</Label>
+            <PhoneInput
+                  inputProps={{
+                    name: 'number',
+                  }}
+                  country={'ua'}
+                  placeholder=''
+                  onChange={(phoneNumber, country, e) => {
+                    handleChange(e);
+                  }}
+                  onBlur={handleBlur}
+                  value={values.number}
+                />
+            <FormError name="number"/>
+            {update ? (
+              <PrimaryButton type='submit'
+                disabled={isLoading}
+                aria-label="update contact button">
+                Update contact
+              </PrimaryButton>
+            ) : (
+              <TertiaryButton disabled={isLoading} type='submit'>
+                Add contact
+              </TertiaryButton>
+            )
+          }
+        </StyledForm>
         )}
-        <Label htmlFor={phoneID}>Number</Label>
-        <Input
-          id={phoneID}
-          type="tel"
-          title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-          {...register('number', {
-            required: 'Phone number is required',
-            pattern:
-              /\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/i,
-          })}
-          aria-invalid={errors.number ? 'true' : 'false'}
-        />
-        {errors.number && <p role="alert">{errors.number?.message}</p>}
-        <Button type="submit" disabled={isLoading}>
-          Add contact
-        </Button>
-      </Form>
-    </Box>
+    </Formik>
   );
 };
 
-ContactForm.propTypes = {
-  onFormSubmit: PropTypes.func.isRequired,
-};
+
+

@@ -1,41 +1,23 @@
-import PropTypes from 'prop-types';
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { nanoid } from 'nanoid';
-import { Box } from '../Box';
-import { Label, Input } from './Filter.styled';
+import {FaSearch} from "react-icons/fa";
+import { useDispatch, useSelector } from 'react-redux';
+import { changeFilter } from 'redux/contacts/contactsSlice';
+import { Label, Input, Box } from "components/ui";
+import { getFilter } from "redux/contacts";
 
-export const Filter = ({ onChange }) => {
-  const filterID = nanoid();
 
-  const { register, watch } = useForm();
-
-  const watchFields = watch(['filter']);
-  onChange(watchFields);
-
-  useEffect(() => {
-    const subscription = watch((value, { name, type }) =>
-      console.log(value, name, type)
-    );
-    return () => subscription.unsubscribe();
-  }, [watch]);
-
+export const Filter = () => {
+  const filter = useSelector(getFilter);
+  const dispatch = useDispatch();
+  
   return (
-    <Box
-      display="block"
-      p={2}
-      mb={3}
-      bg="bgComponent"
-      width="95%"
-      borderRadius="normal"
-      boxShadow="basic"
-    >
-      <Label htmlFor={filterID}>Find contacts by last name</Label>
-      <Input id={filterID} type="text" {...register('filter')} />
+    <Box>
+      <Label htmlFor="filter"><FaSearch/>Find contacts by name</Label>
+        <Input type='text' name='filter' 
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          value={filter}
+          onChange={e => dispatch(changeFilter(e.target.value))}
+        />      
     </Box>
   );
 };
 
-Filter.propTypes = {
-  onChange: PropTypes.func,
-};
